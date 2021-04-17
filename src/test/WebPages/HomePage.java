@@ -93,7 +93,4 @@ public class HomePage {
 
     public WebElement getPassengersDoneBtn() { return passengers_done_btn; }
 
-    public void getFlightDate() {
-
-    }
 }

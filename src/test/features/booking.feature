@@ -24,5 +24,8 @@ Feature: RYANAIR booking
     And the number of the "Child" passenger is increased
     Then the "Done" button is clicked
     And the "Search" button is clicked
+    #When the "Depart" flight date is changed
+    #And the "Return" flight date is changed
+    Then the "Value" fare is selected
 
 

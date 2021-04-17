@@ -1,5 +1,6 @@
 package stepdefs;
 
+import WebPages.FlightsPage;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -16,9 +17,13 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 
 
 public class BookingStepDefs {
+    /*
+    **  Didn't created a WebDriverFactory to do this the proper way, so please comment the line to switch between the desired browsers
+     */
     //WebDriver driver = new ChromeDriver();
     WebDriver driver = new FirefoxDriver();
     HomePage homePage = new HomePage(driver);
+    FlightsPage flightsPage = new FlightsPage(driver);
     WaitUtil waitUtil = new WaitUtil();
 
     String current_url;
@@ -140,10 +145,65 @@ public class BookingStepDefs {
                 break;
         }
     }
+/*
+** I was not able to implement this carousel function because, most of the time, the date elements were stuck in a loading, preventing the click action.
+ */
+  /*  @When("the {string} flight date is changed")
+    public void theFlightDateIsChangedTo(String flight) {
+        switch (flight) {
+            case "Depart":
+                for (int i = 0; i < 1; i++) {
+                    waitUtil.ElementIsVisible(driver, flightsPage.getDepartCarouselNext(), 10);
+                    waitUtil.ElementIsClickable(driver, flightsPage.getDepartCarouselNext(), 10);
+                    flightsPage.getDepartCarouselNext().click();
+                }
+                waitUtil.ElementIsVisible(driver, flightsPage.getNewDepartDate(), 10);
+                waitUtil.ElementIsClickable(driver, flightsPage.getNewDepartDate(), 10);
+                flightsPage.getNewDepartDate().click();
+                break;
+            case "Return":
+                for (int i = 0; i < 1; i++) {
+                    waitUtil.ElementIsVisible(driver, flightsPage.getDepartCarouselNext(), 10);
+                    waitUtil.ElementIsClickable(driver, flightsPage.getDepartCarouselNext(), 10);
+                    flightsPage.getReturnCarouselNext().click();
+                }
+                waitUtil.ElementIsVisible(driver, flightsPage.getNewReturnDate(), 10);
+                waitUtil.ElementIsClickable(driver, flightsPage.getNewReturnDate(), 10);
+                flightsPage.getNewReturnDate().click();
+                break;
+        }
+    }
+
+   */
+
+    @Then("the {string} fare is selected")
+    public void theFareIsSelected(String fare) {
+        switch (fare) {
+            case "Value":
+                waitUtil.ElementIsVisible(driver, flightsPage.getFlightDepart(), 10);
+                waitUtil.ElementIsClickable(driver, flightsPage.getFlightDepart(), 10);
+                flightsPage.getFlightDepart().click();
+                waitUtil.ElementIsVisible(driver, flightsPage.getValueFareBtn(), 10);
+                waitUtil.ElementIsClickable(driver, flightsPage.getValueFareBtn(), 10);
+                flightsPage.getValueFareBtn().click();
+                waitUtil.ElementIsVisible(driver, flightsPage.getFlightReturn(), 10);
+                waitUtil.ElementIsClickable(driver, flightsPage.getFlightReturn(), 10);
+                flightsPage.getFlightReturn().click();
+                waitUtil.ElementIsVisible(driver, flightsPage.getValueFareBtn(), 10);
+                waitUtil.ElementIsClickable(driver, flightsPage.getValueFareBtn(), 10);
+                flightsPage.getValueFareBtn().click();
+                waitUtil.ElementIsVisible(driver, flightsPage.getLoginLaterBtn(), 10);
+                waitUtil.ElementIsClickable(driver, flightsPage.getLoginLaterBtn(), 10);
+                flightsPage.getLoginLaterBtn().click();
+                break;
+        }
+    }
 
     @After
     public void afterHook() {
         //driver.quit();
     }
+
+
 }
 
