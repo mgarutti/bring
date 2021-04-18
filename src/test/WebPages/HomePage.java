@@ -7,7 +7,8 @@ import org.openqa.selenium.support.PageFactory;
 
 public class HomePage {
     private WebDriver driver;
-    private static String HOMEPAGE_URL="https://www.ryanair.com/gb/en";
+    private static String HOMEPAGE_URL = "https://www.ryanair.com/gb/en";
+    private static String DATA_REF_LOCATOR = "//*[@data-ref='";
 
     @FindBy (id = "input-button__departure")
     private WebElement departure_input;
