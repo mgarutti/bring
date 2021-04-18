@@ -34,7 +34,6 @@ public class SeleniumUtil {
     public void selectDropdownListOption(WebDriver driver, List<WebElement> element, String option) {
         switch (option) {
             case "Mr":
-            case "Small bag":
                 waitUtil.elementIsClickable(driver, element.get(0), 10);
                 element.get(0).click();
                 break;
