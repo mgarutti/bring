@@ -1,5 +1,6 @@
 package stepdefs;
 
+import Util.*;
 import WebPages.FlightsPage;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -8,12 +9,14 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import WebPages.HomePage;
-import Util.WaitUtil;
 import org.junit.Assert;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+
+import java.util.concurrent.TimeUnit;
 
 
 public class BookingStepDefs {
@@ -25,12 +28,16 @@ public class BookingStepDefs {
     HomePage homePage = new HomePage(driver);
     FlightsPage flightsPage = new FlightsPage(driver);
     WaitUtil waitUtil = new WaitUtil();
+    SeleniumUtil seleniumUtil = new SeleniumUtil();
+    JavascriptExecutor executor = (JavascriptExecutor)driver;
 
     String current_url;
 
     @Before
     public void beforeHook() {
         driver.manage().window().maximize();
+        driver.manage().timeouts().pageLoadTimeout(20, TimeUnit.SECONDS);
+        driver.manage().timeouts().implicitlyWait(1, TimeUnit.SECONDS);
         driver.navigate().to(homePage.getHomePageUrl());
     }
 
@@ -45,13 +52,19 @@ public class BookingStepDefs {
     public void theIsVisible(String element) {
         switch (element) {
             case "Cookie Modal":
-                waitUtil.ElementIsVisible(driver, homePage.getCookieModal(), 10);
+                waitUtil.elementIsVisible(driver, homePage.getCookieModal(), 5);
                 break;
             case "Departure Field":
-                waitUtil.ElementIsVisible(driver, homePage.getDepartureInput(), 10);
+                waitUtil.elementIsVisible(driver, homePage.getDepartureInput(), 5);
                 break;
             case "Destination Field":
-                waitUtil.ElementIsVisible(driver, homePage.getDestinationInput(), 10);
+                waitUtil.elementIsVisible(driver, homePage.getDestinationInput(), 5);
+                break;
+            case "Family Seating":
+                waitUtil.elementIsVisible(driver, flightsPage.getFamilySeatsModalTitle(), 5);
+                break;
+            case "Basket modal":
+                waitUtil.elementIsVisible(driver, flightsPage.getBasket_tooltip(), 5);
                 break;
         }
     }
@@ -60,16 +73,45 @@ public class BookingStepDefs {
     public void theButtonIsClicked(String button_name) {
         switch (button_name) {
             case "Yes, I Agree":
-                waitUtil.ElementIsClickable(driver, homePage.getAcceptAllCookiesBtn(), 10);
+                waitUtil.elementIsClickable(driver, homePage.getAcceptAllCookiesBtn(), 5);
                 homePage.getAcceptAllCookiesBtn().click();
                 break;
             case "Done":
-                waitUtil.ElementIsClickable(driver, homePage.getPassengersDoneBtn(), 10);
+                waitUtil.elementIsClickable(driver, homePage.getPassengersDoneBtn(), 5);
                 homePage.getPassengersDoneBtn().click();
                 break;
             case "Search":
-                waitUtil.ElementIsClickable(driver, homePage.getSearchFlightBtn(), 10);
+                waitUtil.elementIsClickable(driver, homePage.getSearchFlightBtn(), 5);
                 homePage.getSearchFlightBtn().click();
+                break;
+            case "Login later":
+                waitUtil.elementIsClickable(driver, flightsPage.getLoginLaterBtn(), 5);
+                flightsPage.getLoginLaterBtn().click();
+                break;
+            case "Continue":
+                waitUtil.elementIsClickable(driver, flightsPage.getContinueFlowBtn(), 5);
+                flightsPage.getContinueFlowBtn().click();
+                break;
+            case "Okay, got it":
+                waitUtil.elementIsClickable(driver, flightsPage.getOkayGotItBtn(), 5);
+                flightsPage.getOkayGotItBtn().click();
+                break;
+            case "Next flight":
+                waitUtil.elementIsClickable(driver, flightsPage.getNextFlightBtn(), 5);
+                flightsPage.getNextFlightBtn().click();
+                break;
+            case "No, thanks":
+                waitUtil.elementIsClickable(driver, flightsPage.getDismissFastTrackBtn(), 5);
+                flightsPage.getDismissFastTrackBtn().click();
+                break;
+            case "Continue (to checkout)":
+                waitUtil.elementIsClickable(driver, flightsPage.getContinueToCheckoutBtn(), 5);
+                flightsPage.getContinueToCheckoutBtn().click();
+                break;
+            case "Pick the same return seats":
+                waitUtil.elementIsClickable(driver, flightsPage.getPickSameReturnSeats(), 5);
+                flightsPage.getPickSameReturnSeats().click();
+                //executor.executeScript("arguments[0].click();", flightsPage.getPickSameReturnSeats());
                 break;
         }
     }
@@ -78,14 +120,14 @@ public class BookingStepDefs {
     public void isTypedIntoThe(String text, String input) throws InterruptedException {
         switch (input) {
             case "Departure Field":
-                waitUtil.ElementIsClickable(driver, homePage.getDepartureInput(), 10);
+                waitUtil.elementIsClickable(driver, homePage.getDepartureInput(), 5);
                 homePage.getDepartureInput().click();
                 homePage.getDepartureInput().clear();
                 homePage.getDepartureInput().sendKeys(Keys.chord(Keys.CONTROL,"a", Keys.DELETE));;
                 homePage.getDepartureInput().sendKeys(text);
                 break;
             case "Destination Field":
-                waitUtil.ElementIsClickable(driver, homePage.getDestinationInput(), 10);;
+                waitUtil.elementIsClickable(driver, homePage.getDestinationInput(), 5);;
                 homePage.getDestinationInput().click();
                 homePage.getDestinationInput().sendKeys(text);
                 break;
@@ -94,107 +136,154 @@ public class BookingStepDefs {
 
     @And("the {string} airport is selected")
     public void theAirportIsSelected(String airport) {
-        waitUtil.ElementContainText(driver, homePage.getAirportOption(), airport, 10);
+        waitUtil.elementContainText(driver, homePage.getAirportOption(), airport, 5);
         homePage.getAirportOption().click();
     }
 
-    @When("{string} is selected as the desired month")
-    public void isSelectedAsTheDesiredMonth(String month) {
-        switch (month) {
-            case "June":
-                waitUtil.ElementIsClickable(driver, homePage.getNextMonthBtn(), 10);
-                waitUtil.ElementIsVisible(driver, homePage.getNextMonthBtn(), 10);
-                for (int i = 0; i < 2; i++) {
+    @When("{string} is selected as {string} date")
+    public void isSelectedAsDate(String date, String flight) {
+                while (!waitUtil.elementIsClickable(driver, seleniumUtil.findElementByDataId(driver, date), 10)) {
+                    waitUtil.elementIsClickable(driver, homePage.getNextMonthBtn(), 10);
                     homePage.getNextMonthBtn().click();
                 }
-                break;
-            case "October":
-                waitUtil.ElementIsClickable(driver, homePage.getNextMonthBtn(), 10);
-                for (int i = 0; i < 4; i++) {
-                    homePage.getNextMonthBtn().click();
-                }
-                break;
-        }
-
-    }
-
-    @And("the day {string} is selected")
-    public void theDayIsSelected(String day) {
-        switch (day) {
-            case "6":
-                waitUtil.ElementIsClickable(driver, homePage.getJuneSixDeparture(), 10);
-                homePage.getJuneSixDeparture().click();
-                break;
-            case "30":
-                waitUtil.ElementIsClickable(driver, homePage.getOctoberThirtyReturn(), 10);
-                homePage.getOctoberThirtyReturn().click();
-                break;
-        }
+                waitUtil.elementIsClickable(driver, seleniumUtil.findElementByDataId(driver, date), 10);
+                seleniumUtil.findElementByDataId(driver, date).click();
     }
 
     @Then("the number of the {string} passenger is increased")
     public void theNumberOfThePassengerIsIncreased(String type) {
         switch (type) {
             case "Adult":
-                waitUtil.ElementIsClickable(driver, homePage.getAdultIncrementBtn(), 10);
+                waitUtil.elementIsClickable(driver, homePage.getAdultIncrementBtn(), 5);
                 homePage.getAdultIncrementBtn().click();
                 break;
             case "Child":
-                waitUtil.ElementIsClickable(driver, homePage.getChildIncrementBtn(), 10);
+                waitUtil.elementIsClickable(driver, homePage.getChildIncrementBtn(), 5);
                 homePage.getChildIncrementBtn().click();
                 break;
         }
     }
-/*
-** I was not able to implement this carousel function because, most of the time, the date elements were stuck in a loading, preventing the click action.
- */
-  /*  @When("the {string} flight date is changed")
-    public void theFlightDateIsChangedTo(String flight) {
+
+    @When("the {string} flight date is changed to {string}")
+    public void theFlightDateIsChangedTo(String flight, String date) {
         switch (flight) {
             case "Depart":
-                for (int i = 0; i < 1; i++) {
-                    waitUtil.ElementIsVisible(driver, flightsPage.getDepartCarouselNext(), 10);
-                    waitUtil.ElementIsClickable(driver, flightsPage.getDepartCarouselNext(), 10);
+                while (!waitUtil.elementIsVisible(driver, seleniumUtil.findElementByDataRef(driver, date), 5)) {
+                    waitUtil.elementIsClickable(driver, flightsPage.getDepartCarouselNext(), 4);
                     flightsPage.getDepartCarouselNext().click();
+                    waitUtil.elementIsVisible(driver, flightsPage.getDataLoader(), 1);
                 }
-                waitUtil.ElementIsVisible(driver, flightsPage.getNewDepartDate(), 10);
-                waitUtil.ElementIsClickable(driver, flightsPage.getNewDepartDate(), 10);
-                flightsPage.getNewDepartDate().click();
+                seleniumUtil.findElementByDataRef(driver, date).click();
                 break;
             case "Return":
-                for (int i = 0; i < 1; i++) {
-                    waitUtil.ElementIsVisible(driver, flightsPage.getDepartCarouselNext(), 10);
-                    waitUtil.ElementIsClickable(driver, flightsPage.getDepartCarouselNext(), 10);
+                while (!waitUtil.elementIsVisible(driver, seleniumUtil.findElementByDataRef(driver, date), 5)) {
+                    waitUtil.elementIsClickable(driver, flightsPage.getDepartCarouselNext(), 4);
                     flightsPage.getReturnCarouselNext().click();
+                    waitUtil.elementIsVisible(driver, flightsPage.getDataLoader(), 1);
                 }
-                waitUtil.ElementIsVisible(driver, flightsPage.getNewReturnDate(), 10);
-                waitUtil.ElementIsClickable(driver, flightsPage.getNewReturnDate(), 10);
-                flightsPage.getNewReturnDate().click();
+                seleniumUtil.findElementByDataRef(driver, date).click();
                 break;
         }
     }
 
-   */
+    @Then("the {string} flight is selected")
+    public void theFlightIsSelected(String flight) {
+        switch (flight) {
+            case "Depart":
+                waitUtil.elementIsClickable(driver, flightsPage.getFlightDepart(), 5);
+                flightsPage.getFlightDepart().click();
+                break;
+            case "Return":
+                waitUtil.elementIsClickable(driver, flightsPage.getFlightReturn(), 5);
+                flightsPage.getFlightReturn().click();
+                break;
+        }
+    }
 
-    @Then("the {string} fare is selected")
-    public void theFareIsSelected(String fare) {
+    @And("the {string} fare is selected for the flight")
+    public void theFareIsSelectedForTheFlight(String fare) {
         switch (fare) {
             case "Value":
-                waitUtil.ElementIsVisible(driver, flightsPage.getFlightDepart(), 10);
-                waitUtil.ElementIsClickable(driver, flightsPage.getFlightDepart(), 10);
-                flightsPage.getFlightDepart().click();
-                waitUtil.ElementIsVisible(driver, flightsPage.getValueFareBtn(), 10);
-                waitUtil.ElementIsClickable(driver, flightsPage.getValueFareBtn(), 10);
+                waitUtil.elementIsClickable(driver, flightsPage.getValueFareBtn(), 10);
                 flightsPage.getValueFareBtn().click();
-                waitUtil.ElementIsVisible(driver, flightsPage.getFlightReturn(), 10);
-                waitUtil.ElementIsClickable(driver, flightsPage.getFlightReturn(), 10);
-                flightsPage.getFlightReturn().click();
-                waitUtil.ElementIsVisible(driver, flightsPage.getValueFareBtn(), 10);
-                waitUtil.ElementIsClickable(driver, flightsPage.getValueFareBtn(), 10);
-                flightsPage.getValueFareBtn().click();
-                waitUtil.ElementIsVisible(driver, flightsPage.getLoginLaterBtn(), 10);
-                waitUtil.ElementIsClickable(driver, flightsPage.getLoginLaterBtn(), 10);
-                flightsPage.getLoginLaterBtn().click();
+                break;
+        }
+    }
+
+    @When("the title for passenger {string} is selected as {string}")
+    public void theTitleForPassengerIsSelected(String passenger, String title) {
+        switch (passenger) {
+            case "1":
+                waitUtil.elementIsClickable(driver, flightsPage.getPassengerTitleDropdown().get(0), 10);
+                flightsPage.getPassengerTitleDropdown().get(0).click();
+                seleniumUtil.selectDropdownListOption(driver, flightsPage.getPassengerTitleDropdownSelect(), title);
+                break;
+            case "2":
+                waitUtil.elementIsClickable(driver, flightsPage.getPassengerTitleDropdown().get(1), 10);
+                flightsPage.getPassengerTitleDropdown().get(1).click();
+                seleniumUtil.selectDropdownListOption(driver, flightsPage.getPassengerTitleDropdownSelect(), title);
+                break;
+        }
+    }
+
+    @And("the first name for passenger {string} is {string}")
+    public void theFirstNameForPassengerIs(String passenger, String name) {
+        switch (passenger) {
+            case "1":
+                waitUtil.elementIsClickable(driver, flightsPage.getPassengerFirstNameInput().get(0), 10);
+                flightsPage.getPassengerFirstNameInput().get(0).click();
+                flightsPage.getPassengerFirstNameInput().get(0).sendKeys(name);
+                break;
+            case "2":
+                waitUtil.elementIsClickable(driver, flightsPage.getPassengerFirstNameInput().get(1), 10);
+                flightsPage.getPassengerFirstNameInput().get(1).click();
+                flightsPage.getPassengerFirstNameInput().get(1).sendKeys(name);
+                break;
+            case "3":
+                waitUtil.elementIsClickable(driver, flightsPage.getPassengerFirstNameInput().get(2), 10);
+                flightsPage.getPassengerFirstNameInput().get(2).click();
+                flightsPage.getPassengerFirstNameInput().get(2).sendKeys(name);
+                break;
+        }
+    }
+
+    @And("the last name for passenger {string} is {string}")
+    public void theLastNameForPassengerIs(String passenger, String name) {
+        switch (passenger) {
+            case "1":
+                waitUtil.elementIsClickable(driver, flightsPage.getPassengerLastNameInput().get(0), 10);
+                flightsPage.getPassengerFirstNameInput().get(0).click();
+                flightsPage.getPassengerLastNameInput().get(0).sendKeys(name);
+                break;
+            case "2":
+                waitUtil.elementIsClickable(driver, flightsPage.getPassengerLastNameInput().get(1), 10);
+                flightsPage.getPassengerFirstNameInput().get(1).click();
+                flightsPage.getPassengerLastNameInput().get(1).sendKeys(name);
+                break;
+            case "3":
+                waitUtil.elementIsClickable(driver, flightsPage.getPassengerLastNameInput().get(2), 10);
+                flightsPage.getPassengerFirstNameInput().get(2).click();
+                flightsPage.getPassengerLastNameInput().get(2).sendKeys(name);
+                break;
+        }
+    }
+
+    @And("the seats are selected for {int} passengers")
+    public void theSeatsAreSelectedForPassengers(Integer passengers) {
+        int i;
+        for (i = 0; i < passengers; i++){
+            waitUtil.elementIsVisible(driver, flightsPage.getStandardSeatBtn().get(0), 10);
+            waitUtil.elementIsClickable(driver, flightsPage.getStandardSeatBtn().get(0), 10);
+            executor.executeScript("arguments[0].click();", flightsPage.getStandardSeatBtn().get(0));
+        }
+    }
+
+    @When("the {string} cabin bag is selected")
+    public void theCabinBagIsSelected(String type) {
+        switch (type) {
+            case "Small bag":
+                waitUtil.elementIsClickable(driver, flightsPage.getSmallBagRadioBtn(), 10);
+                executor.executeScript("arguments[0].click();", flightsPage.getSmallBagRadioBtn());
                 break;
         }
     }
@@ -203,7 +292,5 @@ public class BookingStepDefs {
     public void afterHook() {
         //driver.quit();
     }
-
-
 }
 
